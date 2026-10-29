@@ -10,11 +10,10 @@
 // 入口：快捷键 B 开 / 关；合集包侧栏顶上的「资料浏览器」按钮；PF1 自己的法术 / 专长 / 物品 / 怪物浏览器（可在设置里关掉替换）；
 //   聊天卡片里的维基链接；宏 game.modules.get("pf1-banana").api.open("spells", "火球")。
 // 设置都在模组设置里：玩家能不能看怪物页、能不能购买（默认都不能）；「资料浏览器内容」里选合集包和来源书限制（content.mjs）。
-// GM 在窗口顶上有齿轮按钮直接打开「资料浏览器内容」。
 import { MODULE } from "./const.mjs";
 import { loadLib, keysOf, score } from "./pinyin.mjs";
 import { buyItem, buySpell } from "./buy.mjs";
-import { packsFor, sourceFilter, ContentConfig } from "./content.mjs";
+import { packsFor, sourceFilter } from "./content.mjs";
 
 const BASE = `modules/${MODULE}/data/`;
 const WIKI = "https://pf1.huijiwiki.com/wiki/";
@@ -318,7 +317,6 @@ class DDBrowser extends foundry.applications.api.ApplicationV2 {
         <select class="pb-sort"></select>
         <button type="button" class="pb-reset" style="width:auto"><i class="fa-solid fa-filter-circle-xmark"></i> 重置筛选</button>
         <span class="pb-br-count"></span>
-        ${game.user.isGM ? '<button type="button" class="pb-config" style="width:auto" data-tooltip="资料浏览器内容：合集包、来源书限制（其他开关在模组设置里）"><i class="fa-solid fa-gear"></i></button>' : ""}
       </div>
       <div class="pb-br-body">
         <div class="pb-br-filters"></div>
@@ -330,7 +328,6 @@ class DDBrowser extends foundry.applications.api.ApplicationV2 {
       filters: q(".pb-br-filters"), list: q(".pb-br-list"), ol: q(".pb-br-list ol"), detail: q(".pb-br-detail") };
     const e = this.#els;
     this.renderTabs();
-    content.querySelector(".pb-config")?.addEventListener("click", () => new ContentConfig().render({ force: true }));
     e.tabs.addEventListener("click", (ev) => {
       const b = ev.target.closest("button[data-tab]");
       if (b) this.switchTab(b.dataset.tab);
