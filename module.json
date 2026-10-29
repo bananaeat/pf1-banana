@@ -1,0 +1,60 @@
+{
+  "id": "pf1-banana",
+  "title": "PF1 香蕉工具箱（资料浏览器 / 购买 / 出售）",
+  "description": "PF1 中文资料浏览器：法术、专长、特性、物品、怪物与 NPC，按 PF2 浏览器的样子做了多项筛选（包含 / 排除）、拼音搜索和维基详情，能拖进角色卡；附带一键购买（物品、卷轴、药水、魔杖）和角色卡上的快捷出售。数据来自开拓者1版中文维基。",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "authors": [
+    {
+      "name": "bananaeat",
+      "url": "https://github.com/bananaeat"
+    },
+    {
+      "name": "社区译者（开拓者1版中文维基汇集）",
+      "url": "https://pf1.huijiwiki.com"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "pf1",
+        "type": "system",
+        "compatibility": {
+          "minimum": "11"
+        }
+      }
+    ],
+    "recommends": [
+      {
+        "id": "pf1e_compendium_chn",
+        "type": "module",
+        "reason": "合集包条目显示中文名；没装也能用（按英文名对上）。"
+      },
+      {
+        "id": "pf-content",
+        "type": "module",
+        "reason": "补全专长、特性、魔法物品等合集包条目，更多条目可以拖进角色卡。"
+      },
+      {
+        "id": "pf1-zh-monsters",
+        "type": "module",
+        "reason": "怪物 / NPC 页的条目可以拖进场景。"
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.mjs"
+  ],
+  "styles": [
+    "styles/banana.css"
+  ],
+  "languages": [],
+  "url": "https://github.com/bananaeat/pf1-banana",
+  "manifest": "https://github.com/bananaeat/pf1-banana/releases/latest/download/module.json",
+  "download": "https://github.com/bananaeat/pf1-banana/releases/download/v1.0.0/pf1-banana-1.0.0.zip",
+  "readme": "https://github.com/bananaeat/pf1-banana/blob/main/README.md",
+  "license": "LICENSE"
+}
