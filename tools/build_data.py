@@ -2,7 +2,7 @@
 
 用法：python tools/build_data.py [pf1-zh-wiki-data 目录]（也可用环境变量 PFWIKI_DATA）
 输出 data/：
-  meta.json            版本号 + 各分页的分片数（页面用版本号做缓存键）
+  meta.json            版本号 + 各分页的分片数（页面用版本号做缓存键）+ 各分页每本来源书的条数
   <tab>.json           列表（筛选字段），每行带 d = 详情分片号
   d/<tab>-<n>.json     详情 HTML：{页名: html}
   pages.json           全部页名 → 分页（详情里的链接跳转用；重定向已解析）
@@ -404,7 +404,12 @@ def main():
         if buf:
             (OUT / "d" / f"{tab}-{shard}.json").write_text(json.dumps(buf, ensure_ascii=False), "utf-8")
         (OUT / f"{tab}.json").write_text(json.dumps(rows, ensure_ascii=False, separators=(",", ":")), "utf-8")
-        meta["tabs"][tab] = {"rows": len(rows), "shards": shard + 1}
+        # 各来源书的条数：模组设置里「来源书限制」列书用
+        books_count = {}
+        for r in rows:
+            for b in r.get("src", []):
+                books_count[b] = books_count.get(b, 0) + 1
+        meta["tabs"][tab] = {"rows": len(rows), "shards": shard + 1, "books": books_count}
         print(tab, len(rows), "行", shard + 1, "片", (OUT / f"{tab}.json").stat().st_size // 1024, "KB")
     (OUT / "pages.json").write_text(json.dumps(pages, ensure_ascii=False, separators=(",", ":")), "utf-8")
     (OUT / "meta.json").write_text(json.dumps(meta, ensure_ascii=False), "utf-8")

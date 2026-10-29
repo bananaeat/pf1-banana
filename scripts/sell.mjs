@@ -4,6 +4,7 @@
 // 价格用 PF1 自己的 item.getValue({ sellValue })：普通物品按设置的比例（默认半价），财宝/贸易品全价，带次数的按剩余次数算，
 //   损坏、陈旧按系统倍率；玩家看不到真名的未鉴定物品按未鉴定价卖（规则如此，GM 自己卖才按真价）。
 // 钱加进普通货币（system.currency，Item Piles 商店只认这个），结果密语给 GM 和卖家。不能卖：没价钱的、装着东西的容器。
+// 模组设置「角色卡上可以出售」打开才有这些按钮（默认关）。
 // 钱币不计重量（pf1.coinWeight = 0）时，「货币无重量」那一行多余，里面没钱就藏起来。
 import { MODULE } from "./const.mjs";
 
@@ -151,7 +152,7 @@ async function sellMany(actor) {
 
 Hooks.on("renderActorSheetPF", (app, html) => {
   const actor = app.actor;
-  if (actor?.type !== "character" || !actor.isOwner) return;
+  if (actor?.type !== "character" || !actor.isOwner || !game.settings.get(MODULE, "sell")) return;
   const root = html[0] ?? html;
   const inv = root.querySelector('.tab[data-tab="inventory"]');
   if (!inv) return;

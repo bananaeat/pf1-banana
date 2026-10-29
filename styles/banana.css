@@ -52,3 +52,14 @@
 .pb-gmopt { display: flex; align-items: center; gap: 2px; white-space: nowrap; font-size: 12px; }
 .pb-row .pb-buy { margin-left: 6px; opacity: .7; }
 .pb-row .pb-buy:hover { opacity: 1; color: var(--color-warm-2, #c9593f); }
+
+/* 资料浏览器内容设置 */
+.pb-content fieldset { margin-bottom: 8px; }
+.pb-content .pb-c-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 3px 0; }
+.pb-content .pb-c-tools button { width: auto; line-height: 22px; padding: 0 8px; }
+.pb-content .pb-c-tools input[type=search] { width: 10em; height: 24px; }
+.pb-content .pb-c-books { max-height: 220px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0 8px; border: 1px solid var(--color-border, #7a7971); padding: 4px; }
+.pb-content .pb-c-books span, .pb-content .pb-c-packs span { opacity: .55; font-size: 11px; }
+.pb-content .pb-c-packs { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; padding-left: 8px; }
+.pb-content .pb-c-packs em { color: #c03030; font-size: 11px; }
+.pb-content details summary { cursor: pointer; font-weight: bold; margin: 3px 0; }

@@ -9,10 +9,12 @@
 // 搜索：中文、英文、拼音全拼、拼音首字母。
 // 入口：快捷键 B 开 / 关；合集包侧栏顶上的「资料浏览器」按钮；PF1 自己的法术 / 专长 / 物品 / 怪物浏览器（可在设置里关掉替换）；
 //   聊天卡片里的维基链接；宏 game.modules.get("pf1-banana").api.open("spells", "火球")。
-// GM 开关（窗口顶上，也在模组设置里）：玩家能不能看怪物页（默认不能）、能不能购买（buy.mjs，默认能）。
+// 设置都在模组设置里：玩家能不能看怪物页、能不能购买（默认都不能）；「资料浏览器内容」里选合集包和来源书限制（content.mjs）。
+// GM 在窗口顶上有齿轮按钮直接打开「资料浏览器内容」。
 import { MODULE } from "./const.mjs";
 import { loadLib, keysOf, score } from "./pinyin.mjs";
 import { buyItem, buySpell } from "./buy.mjs";
+import { packsFor, sourceFilter, ContentConfig } from "./content.mjs";
 
 const BASE = `modules/${MODULE}/data/`;
 const WIKI = "https://pf1.huijiwiki.com/wiki/";
@@ -38,7 +40,7 @@ const LEVELS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 const TABS = {
   spells: {
-    label: "法术", icon: "fa-solid fa-wand-sparkles", doc: "Item", packs: () => ["pf1.spells"],
+    label: "法术", icon: "fa-solid fa-wand-sparkles", doc: "Item",
     filters: [
       multi("cl", "职业", { get: (r) => Object.keys(r.cl ?? {}), open: true }),
       // 选了职业就按那些职业的环级，没选就按最低环级
@@ -66,7 +68,7 @@ const TABS = {
     },
   },
   feats: {
-    label: "专长", icon: "fa-solid fa-medal", doc: "Item", packs: () => ["pf1.feats", "pf-content.pf-feats"],
+    label: "专长", icon: "fa-solid fa-medal", doc: "Item",
     filters: [
       multi("k", "类型", { many: true, open: true }),
       check("nopre", "没有先决条件", (r) => !r.pre),
@@ -80,7 +82,7 @@ const TABS = {
     meta: (r) => arr(r.k).join("、") || (r.fo ? "" : "通用"),
   },
   traits: {
-    label: "特性", icon: "fa-solid fa-feather", doc: "Item", packs: () => ["pf-content.pf-traits"],
+    label: "特性", icon: "fa-solid fa-feather", doc: "Item",
     filters: [
       multi("k", "类型", { open: true }),
       check("nopre", "没有先决条件", (r) => !r.pre),
@@ -94,8 +96,6 @@ const TABS = {
   },
   items: {
     label: "物品", icon: "fa-solid fa-sack", doc: "Item",
-    packs: () => ["pf1.items", "pf1.weapons-and-ammo", "pf1.armors-and-shields", "pf1.technology", "pf-content.pf-items",
-      "pf-content.pf-magic-items", "pf-content.pf-wondrous", "pf-content.pf-artifacts", "pf-content.pf-cursed-items", "pf-content.pf-intelligent-items"],
     filters: [
       multi("cat", "分类", { open: true }),
       multi("sub", "子类", { dependsOn: "cat" }),
@@ -113,7 +113,6 @@ const TABS = {
   },
   monsters: {
     label: "怪物/NPC", icon: "fa-solid fa-dragon", doc: "Actor", gm: true,
-    packs: () => game.packs.filter((p) => p.metadata.packageName === "pf1-zh-monsters" && p.documentName === "Actor").map((p) => p.collection),
     filters: [
       multi("kd", "怪物 / NPC", { open: true }),
       range("cr", "CR", { step: 0.125 }),
@@ -228,11 +227,17 @@ function foundryItemCat(e) {
   return pair[1] ? { cat: pair[0], sub: pair[1] } : { cat: pair[0] };
 }
 
-// 读维基列表，再和合集包索引对上
+// 读一个分页：维基列表和合集包对上，再按来源书限制过滤
 async function loadTab(tab) {
-  const def = TABS[tab];
+  const rows = await linkTab(tab);
+  const keep = sourceFilter(tab);
+  return keep ? rows.filter(keep) : rows;
+}
+
+// 读维基列表，再和合集包索引对上
+async function linkTab(tab) {
   const rows = await getJSON(`${tab}.json`);
-  const packs = def.packs().map((id) => game.packs.get(id)).filter(Boolean);
+  const packs = packsFor(tab);
   const fields = tab === "monsters" ? ["flags.zh-monsters.page", "system.details.cr.base"] : tab === "items" ? ["system.price", "system.subType", "system.cl"] : [];
   const indexes = await Promise.all(packs.map((p) => p.getIndex({ fields })));
   if (tab === "monsters") {
@@ -313,8 +318,7 @@ class DDBrowser extends foundry.applications.api.ApplicationV2 {
         <select class="pb-sort"></select>
         <button type="button" class="pb-reset" style="width:auto"><i class="fa-solid fa-filter-circle-xmark"></i> 重置筛选</button>
         <span class="pb-br-count"></span>
-        ${game.user.isGM ? `<label class="pb-gmopt" data-tooltip="关着时只有 GM 能看怪物/NPC 页"><input type="checkbox" data-setting="monsters" ${setting("monsters") ? "checked" : ""}> 玩家可看怪物</label>
-          <label class="pb-gmopt" data-tooltip="关掉后谁都不能在这里买东西（比如在地城里）"><input type="checkbox" data-setting="shop" ${setting("shop") ? "checked" : ""}> 可以购买</label>` : ""}
+        ${game.user.isGM ? '<button type="button" class="pb-config" style="width:auto" data-tooltip="资料浏览器内容：合集包、来源书限制（其他开关在模组设置里）"><i class="fa-solid fa-gear"></i></button>' : ""}
       </div>
       <div class="pb-br-body">
         <div class="pb-br-filters"></div>
@@ -326,9 +330,7 @@ class DDBrowser extends foundry.applications.api.ApplicationV2 {
       filters: q(".pb-br-filters"), list: q(".pb-br-list"), ol: q(".pb-br-list ol"), detail: q(".pb-br-detail") };
     const e = this.#els;
     this.renderTabs();
-    for (const box of content.querySelectorAll("input[data-setting]")) {
-      box.addEventListener("change", () => game.settings.set(MODULE, box.dataset.setting, box.checked));
-    }
+    content.querySelector(".pb-config")?.addEventListener("click", () => new ContentConfig().render({ force: true }));
     e.tabs.addEventListener("click", (ev) => {
       const b = ev.target.closest("button[data-tab]");
       if (b) this.switchTab(b.dataset.tab);
@@ -371,10 +373,17 @@ class DDBrowser extends foundry.applications.api.ApplicationV2 {
       .map(([k, d]) => `<button type="button" data-tab="${k}" class="${k === this.tab ? "active" : ""}"><i class="${d.icon}"></i> ${d.label}</button>`).join("");
   }
 
+  // 合集包或来源书限制变了：已读的数据作废，重读当前分页
+  onContentChange() {
+    if (!this.#els.tabs) return;
+    this.data = {};
+    for (const st of Object.values(this.tabStates)) st.sel = null;
+    this.switchTab(this.tab);
+  }
+
   // GM 改了开关：分页和购买按钮跟着变
   onSettingChange() {
     if (!this.#els.tabs) return;
-    for (const box of this.element.querySelectorAll("input[data-setting]")) box.checked = setting(box.dataset.setting);
     this.renderTabs();
     if (!allowed(this.tab)) return this.switchTab("spells");
     this.refresh();
@@ -733,7 +742,12 @@ async function openPage(page) {
 }
 
 // 设置、快捷键在 main.mjs 里注册（onChange 要用到这里的 app）
-export const browserApi = { open, openPage, settingChanged: () => app?.onSettingChange(), toggle: () => (app?.rendered ? app.close() : open()) };
+export const browserApi = {
+  open, openPage,
+  settingChanged: () => app?.onSettingChange(),
+  contentChanged: () => app?.onContentChange(),
+  toggle: () => (app?.rendered ? app.close() : open()),
+};
 
 // 合集包侧栏顶上加按钮
 Hooks.on("renderCompendiumDirectory", (dir, html) => {
