@@ -156,6 +156,8 @@ Hooks.on("renderActorSheetPF", (app, html) => {
   const root = html[0] ?? html;
   const inv = root.querySelector('.tab[data-tab="inventory"]');
   if (!inv) return;
+  // PF1 的操作栏固定 120px，正好放 7 个图标，多了出售按钮就把删除挤掉一半：整列（含表头）加宽一格
+  inv.classList.add("pb-sell-on");
   const currencies = inv.querySelector("header .currencies");
   if (game.settings.get("pf1", "coinWeight") === 0 && !Object.values(actor.system.altCurrency ?? {}).some((v) => v)) {
     currencies?.querySelector("ol.currency.weightless")?.remove();

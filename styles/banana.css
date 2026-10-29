@@ -62,3 +62,6 @@
 .pb-content .pb-c-packs { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; padding-left: 8px; }
 .pb-content .pb-c-packs em { color: #c03030; font-size: 11px; }
 .pb-content details summary { cursor: pointer; font-weight: bold; margin: 3px 0; }
+
+/* 快捷出售：物品栏操作栏多一个按钮，整列加宽 16px（PF1 原来是 120px） */
+.tab.pb-sell-on .item-controls { flex: 0 0 136px; }
