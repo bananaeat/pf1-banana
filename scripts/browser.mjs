@@ -25,7 +25,8 @@ const gp = (v) => (v == null ? "" : v >= 1 ? `${+v.toFixed(2)} gp` : v >= 0.1 ? 
 const crText = (v) => (v == null ? "" : v >= 1 ? String(Math.round(v)) : `1/${Math.round(1 / v)}`);
 
 // ---------- 筛选定义 ----------
-const multi = (key, label, o = {}) => ({ kind: "multi", key, label, get: o.get ?? ((r) => r[key]), many: !!o.many, order: o.order, open: !!o.open });
+// dependsOn：选项只列上级筛选（如「分类」）选中的那些条目里有的值，上级一变就重算
+const multi = (key, label, o = {}) => ({ kind: "multi", key, label, get: o.get ?? ((r) => r[key]), many: !!o.many, order: o.order, open: !!o.open, dependsOn: o.dependsOn });
 const range = (key, label, o = {}) => ({ kind: "range", key, label, get: o.get ?? ((r) => r[key]), step: o.step ?? 1 });
 const check = (key, label, test) => ({ kind: "check", key, label, test });
 const text = (key, label, get) => ({ kind: "text", key, label, get });
@@ -41,7 +42,7 @@ const TABS = {
     filters: [
       multi("cl", "职业", { get: (r) => Object.keys(r.cl ?? {}), open: true }),
       // 选了职业就按那些职业的环级，没选就按最低环级
-      multi("lv", "环级", { order: LEVELS, open: true, get: (r, st) => {
+      multi("lv", "环级", { order: LEVELS, open: true, dependsOn: "cl", get: (r, st) => {
         const cls = included(st.cl);
         if (!cls.length) return r.lv != null ? [String(r.lv)] : [];
         return cls.map((c) => r.cl?.[c]).filter((v) => v != null).map(String);
@@ -97,7 +98,7 @@ const TABS = {
       "pf-content.pf-magic-items", "pf-content.pf-wondrous", "pf-content.pf-artifacts", "pf-content.pf-cursed-items", "pf-content.pf-intelligent-items"],
     filters: [
       multi("cat", "分类", { open: true }),
-      multi("sub", "子类"),
+      multi("sub", "子类", { dependsOn: "cat" }),
       multi("slot", "部位"),
       range("pr", "价格（gp）", { step: 1 }),
       range("cl", "施法者等级"),
@@ -200,12 +201,39 @@ function variantName(e, en, base) {
   return n;
 }
 
+// 维基上没有的合集包物品，按 PF1 的物品类型归到和维基一样的分类
+const LOOT_CAT = {
+  ammo: ["武器", "弹药"], tradeGoods: ["冒险装备", "其他"], treasure: ["冒险装备", "其他"], food: ["冒险装备", "饮食与住宿"],
+  tool: ["冒险装备", "工具与套装"], entertainment: ["冒险装备", "其他"], animal: ["坐骑与交通", "坐骑与宠物"],
+  animalGear: ["坐骑与交通", "动物装备"], vehicle: ["坐骑与交通", "交通工具"], reagent: ["炼金物品", "炼金工具"],
+  remedy: ["炼金物品", "炼金药剂"], herb: ["炼金物品", "草药与酊剂"],
+};
+function foundryItemCat(e) {
+  const s = e.system?.subType;
+  const pair = (() => {
+    switch (e.type) {
+      case "weapon": return ["武器", { simple: "简易武器", martial: "军用武器", exotic: "异种武器", siege: "攻城兵器" }[s] ?? "异种武器"];
+      case "equipment":
+        if (s === "armor" || s === "shield") return ["防具", s === "shield" ? "盾牌" : ""];
+        if (s === "wondrous") return ["奇物", ""];
+        if (s === "clothing") return ["冒险装备", "衣物"];
+        return e.system?.cl > 0 ? ["其他魔法物品", "其他"] : ["冒险装备", "其他"];
+      case "consumable":
+        return { potion: ["其他魔法物品", "药水"], scroll: ["其他魔法物品", "卷轴"], wand: ["其他魔法物品", "魔杖"], staff: ["法杖", ""] }[s] ?? ["炼金物品", "炼金药剂"];
+      case "loot": return LOOT_CAT[s] ?? ["冒险装备", "冒险装备"];
+      case "container": return ["冒险装备", "冒险装备"];
+      default: return ["其他魔法物品", "其他"];
+    }
+  })();
+  return pair[1] ? { cat: pair[0], sub: pair[1] } : { cat: pair[0] };
+}
+
 // 读维基列表，再和合集包索引对上
 async function loadTab(tab) {
   const def = TABS[tab];
   const rows = await getJSON(`${tab}.json`);
   const packs = def.packs().map((id) => game.packs.get(id)).filter(Boolean);
-  const fields = tab === "monsters" ? ["flags.zh-monsters.page", "system.details.cr.base"] : tab === "items" ? ["system.price"] : [];
+  const fields = tab === "monsters" ? ["flags.zh-monsters.page", "system.details.cr.base"] : tab === "items" ? ["system.price", "system.subType", "system.cl"] : [];
   const indexes = await Promise.all(packs.map((p) => p.getIndex({ fields })));
   if (tab === "monsters") {
     const byPage = new Map(rows.map((r) => [r.p, r]));
@@ -246,7 +274,7 @@ async function loadTab(tab) {
       continue;
     }
     const row = base ? { ...base[0], n: variantName(e, en, base[0]), e: en, uuid: e.uuid, img: e.img, _py: undefined }
-      : { n: variantName(e, en), e: en, uuid: e.uuid, img: e.img, fo: true, ...(tab === "items" ? { cat: "仅合集包" } : {}) };
+      : { n: variantName(e, en), e: en, uuid: e.uuid, img: e.img, fo: true, ...(tab === "items" ? foundryItemCat(e) : {}) };
     if (tab === "items" && e.system?.price) row.pr = e.system.price;
     extra.push(row);
   }
@@ -407,6 +435,11 @@ class DDBrowser extends foundry.applications.api.ApplicationV2 {
   optionsOf(f, rows) {
     const counts = new Map();
     const st = this.tabState().filters;
+    if (f.dependsOn) {
+      const parent = TABS[this.tab].filters.find((x) => x.key === f.dependsOn);
+      const inc = included(st[f.dependsOn]);
+      if (inc.length) rows = rows.filter((r) => arr(parent.get(r, st)).some((v) => inc.includes(String(v))));
+    }
     for (const r of rows) for (const v of new Set(arr(f.get(r, st)))) if (v !== "" && v != null) counts.set(v, (counts.get(v) ?? 0) + 1);
     const list = [...counts];
     if (f.order) list.sort((a, b) => f.order.indexOf(String(a[0])) - f.order.indexOf(String(b[0])));
@@ -454,6 +487,9 @@ class DDBrowser extends foundry.applications.api.ApplicationV2 {
   #buildMulti(el, f, rows, fs) {
     const opts = this.optionsOf(f, rows);
     const sel = (fs[f.key] ??= new Map());
+    // 上级筛选变了以后，已经不在选项里的选择作废
+    for (const v of [...sel.keys()]) if (!opts.some(([o]) => String(o) === v)) sel.delete(v);
+    el.hidden = !opts.length;
     if (f.many && fs[`${f.key}:all`] == null) fs[`${f.key}:all`] = false;
     el.open = f.open || sel.size > 0;
     const summary = () => {
@@ -487,9 +523,9 @@ class DDBrowser extends foundry.applications.api.ApplicationV2 {
       o.classList.toggle("exc", next === -1);
       sum.innerHTML = summary();
       // 环级跟着职业算，职业变了要重算环级的条数
-      if (f.key === "cl") {
-        const lvEl = this.#els.filters.querySelector('[data-key="lv"]');
-        if (lvEl) this.#buildMulti(lvEl, TABS.spells.filters.find((x) => x.key === "lv"), rows, fs);
+      for (const dep of TABS[this.tab].filters.filter((x) => x.dependsOn === f.key)) {
+        const depEl = this.#els.filters.querySelector(`[data-key="${dep.key}"]`);
+        if (depEl) this.#buildMulti(depEl, dep, rows, fs);
       }
       this.refresh();
     });
