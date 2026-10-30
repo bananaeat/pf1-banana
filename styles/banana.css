@@ -65,3 +65,34 @@
 
 /* 快捷出售：物品栏操作栏多一个按钮，整列加宽 16px（PF1 原来是 120px） */
 .tab.pb-sell-on .item-controls { flex: 0 0 136px; }
+
+/* 战前准备 */
+.pb-prebuff .window-content { padding: 6px 10px; }
+.pb-pre h4 { margin: 8px 0 4px; border-bottom: 1px solid var(--color-border, #7a7971); font-size: 14px; }
+.pb-pre .pb-pre-hint { font-weight: normal; font-size: 11px; opacity: .6; margin-left: 6px; }
+.pb-pre-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pb-pre-head select { width: auto; }
+.pb-pre-head button { width: auto; margin-left: auto; line-height: 22px; padding: 0 8px; }
+.pb-pre-warn { color: #c03030; font-size: 12px; }
+.pb-pre-empty { opacity: .6; margin: 2px 0; }
+.pb-pre-status { list-style: none; margin: 0; padding: 0; }
+.pb-pre-status li { margin: 2px 0; }
+.pb-pre .pb-tag { display: inline-block; font-size: 11px; padding: 0 4px; border-radius: 3px; border: 1px solid rgba(127,127,127,.5); margin: 1px 2px; }
+.pb-pre .pb-tag-warn { border-color: #c03030; color: #c03030; }
+.pb-pre .pb-tag-on { border-color: #3a8d3a; color: #3a8d3a; }
+.pb-pre-plan, .pb-pre-cands { list-style: none; margin: 0; padding: 0; }
+.pb-pre-row, .pb-pre-cands li { display: flex; gap: 6px; align-items: center; padding: 2px 0; border-bottom: 1px solid rgba(127,127,127,.2); }
+.pb-pre-row img, .pb-pre-cands img { width: 24px; height: 24px; border: none; flex: none; }
+.pb-pre-row.pb-off { opacity: .55; }
+.pb-pre-name { flex: 1; min-width: 120px; }
+.pb-pre-cost { font-size: 11px; opacity: .75; white-space: nowrap; }
+.pb-pre-tgt { font-size: 12px; min-width: 90px; position: relative; }
+.pb-pre-tgt summary { cursor: pointer; white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.pb-pre-tgt > div { position: absolute; right: 0; z-index: 5; background: var(--color-bg-option, #1e1e1e); border: 1px solid var(--color-border, #7a7971); padding: 4px 6px; display: flex; flex-direction: column; min-width: 140px; }
+.pb-pre-tgt.pb-fixed { opacity: .6; }
+.pb-pre-del, .pb-pre-add { cursor: pointer; opacity: .7; }
+.pb-pre-del:hover, .pb-pre-add:hover { opacity: 1; color: var(--color-warm-2, #c9593f); }
+.pb-pre-kind { font-size: 11px; opacity: .55; margin-left: auto; }
+.pb-pre-foot { margin-top: 8px; }
+.pb-pre-note { font-size: 12px; margin-bottom: 6px; padding: 4px; border: 1px solid rgba(127,127,127,.4); border-radius: 3px; }
+.pb-pre-go { width: 100%; }

@@ -2,7 +2,7 @@
   "id": "pf1-banana",
   "title": "PF1 香蕉工具箱（资料浏览器 / 购买 / 出售）",
   "description": "PF1 中文资料浏览器：法术、专长、特性、物品、怪物与 NPC，按 PF2 浏览器的样子做了多项筛选（包含 / 排除）、拼音搜索和维基详情，能拖进角色卡；附带一键购买（物品、卷轴、药水、魔杖）和角色卡上的快捷出售。数据来自开拓者1版中文维基。",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "compatibility": {
     "minimum": "13",
     "verified": "13"
@@ -54,7 +54,7 @@
   "languages": [],
   "url": "https://github.com/bananaeat/pf1-banana",
   "manifest": "https://github.com/bananaeat/pf1-banana/releases/latest/download/module.json",
-  "download": "https://github.com/bananaeat/pf1-banana/releases/download/v1.1.2/pf1-banana-1.1.2.zip",
+  "download": "https://github.com/bananaeat/pf1-banana/releases/download/v1.2.0/pf1-banana-1.2.0.zip",
   "readme": "https://github.com/bananaeat/pf1-banana/blob/main/README.md",
   "license": "LICENSE"
 }

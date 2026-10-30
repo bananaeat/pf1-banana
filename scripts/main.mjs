@@ -1,9 +1,10 @@
-// pf1-banana：PF1 中文资料浏览器 + 一键购买 + 快捷出售。
+// pf1-banana：PF1 中文资料浏览器 + 一键购买 + 快捷出售 + 战前准备。
 import { MODULE } from "./const.mjs";
 import { browserApi } from "./browser.mjs";
 import { ContentConfig, DEFAULT_CONTENT } from "./content.mjs";
 import { buyItem, buySpell } from "./buy.mjs";
 import "./sell.mjs";
+import { openPrebuff, registerPrebuff } from "./prebuff.mjs";
 
 Hooks.once("init", () => {
   const onChange = () => browserApi.settingChanged();
@@ -42,6 +43,25 @@ Hooks.once("init", () => {
     hint: "角色卡上的「浏览」等打开 PF1 法术 / 专长 / 物品 / 怪物浏览器时，改为打开资料浏览器。",
     scope: "world", config: true, type: Boolean, default: true,
   });
+  game.settings.register(MODULE, "prebuff", {
+    name: "战前准备",
+    hint: "每个角色存一份战前增益方案，一键施放（扣环位、卷轴、魔杖次数等）并给目标挂上增益。快捷键 P、角色 token HUD 的盾牌按钮打开。",
+    scope: "world", config: true, type: Boolean, default: true,
+  });
+  game.settings.register(MODULE, "prebuffAuto", {
+    name: "建遭遇时自动弹出战前准备",
+    hint: "GM 把角色加进战斗（还没开始）时，在场角色的玩家自动弹出战前准备，每场战斗一次。",
+    scope: "world", config: true, type: Boolean, default: true,
+  });
+  game.keybindings.register(MODULE, "prebuff", {
+    name: "打开战前准备",
+    editable: [{ key: "KeyP" }],
+    onDown: () => {
+      openPrebuff();
+      return true;
+    },
+  });
+  registerPrebuff();
   game.keybindings.register(MODULE, "toggle", {
     name: "打开 / 关闭资料浏览器",
     editable: [{ key: "KeyB" }],
@@ -50,5 +70,5 @@ Hooks.once("init", () => {
       return true;
     },
   });
-  game.modules.get(MODULE).api = { open: browserApi.open, openPage: browserApi.openPage, buyItem, buySpell };
+  game.modules.get(MODULE).api = { open: browserApi.open, openPage: browserApi.openPage, buyItem, buySpell, prebuff: openPrebuff };
 });
